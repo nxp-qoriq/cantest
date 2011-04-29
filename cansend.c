@@ -90,13 +90,6 @@ int main(int argc, char **argv)
     addr.can_ifindex = ifr.ifr_ifindex;
 
     ifr.ifr_ifru.ifru_ivalue = 1000000/2;
-    ret = ioctl(s, SIOCSCANBAUDRATE, &ifr);
-    if (ret) {
-	    printf("Err: cantest failed to set up baud rate for can port %s\n",
-			    					argv[1]);
-	    printf("     Please check the settings of system clock.\n");
-	    exit(1);
-    }
 
     if (bind(s, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
       perror("bind");
