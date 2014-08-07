@@ -17,7 +17,10 @@
 #ifndef CAN_RAW_H
 #define CAN_RAW_H
 
-#include <linux/can.h>
+#include "can.h"
+
+#define PF_CAN		AF_CAN
+#define AF_CAN		29	/* Controller Area Network      */
 
 #define SOL_CAN_RAW (SOL_CAN_BASE + CAN_RAW)
 

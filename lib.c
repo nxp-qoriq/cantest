@@ -49,8 +49,8 @@
 #include <string.h>
 
 #include <sys/socket.h> /* for sa_family_t */
-#include <linux/can.h>
 
+#include "can.h"
 #include "lib.h"
 
 #define CANID_DELIM '#'
