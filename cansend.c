@@ -3,7 +3,8 @@
  */
 
 /*
- * cansend.c - simple command line tool to send CAN-frames via CAN_RAW sockets
+ * cansend.c - simple command line tool to send and receive
+ * 		CAN-frames via CAN_RAW sockets
  *
  * Copyright (c) 2002-2007 Volkswagen Group Electronic Research
  * All rights reserved.
@@ -67,23 +68,12 @@ int main(int argc, char **argv)
     struct sockaddr_can addr;
     struct can_frame frame, rframe;
     struct ifreq ifr;
+    int i;
 
     /* check command line options */
-    if (argc != 3) {
-        fprintf(stderr, "Usage: %s <device> <can_frame>.\n", argv[0]);
-        return 1;
-    }
-
-    /* parse CAN frame */
-    if (parse_canframe(argv[2], &frame)){
-	fprintf(stderr, "\nWrong CAN-frame format!\n\n");
-	fprintf(stderr, "Try: <can_id>#{R|data}\n");
-	fprintf(stderr, "can_id can have 3 (SFF) or 8 (EFF) hex chars\n");
-	fprintf(stderr, "data has 0 to 8 hex-values that can (optionally)");
-	fprintf(stderr, " be seperated by '.'\n\n");
-	fprintf(stderr, "e.g. 5A1#11.2233.44556677.88 / 123#DEADBEEF / ");
-	fprintf(stderr, "5AA# /\n     1F334455#1122334455667788 / 123#R ");
-	fprintf(stderr, "for remote transmission request.\n\n");
+    if ((argc != 2) && (argc != 3)) {
+        fprintf(stderr, "Usage: send frame: %s <device>.\n", argv[0]);
+	fprintf(stderr, "Usage: receive frame: %s <device> <can_frame>.\n", argv[0]);
 	return 1;
     }
 
@@ -107,22 +97,32 @@ int main(int argc, char **argv)
       return 1;
     }
 
-    /* send frame */
-    if ((nbytes = write(s, &frame, sizeof(frame))) != sizeof(frame)) {
-      perror("write");
-      return 1;
+    if (argc ==3) {
+	    /* parse CAN frame */
+	    if (parse_canframe(argv[2], &frame)){
+		fprintf(stderr, "\nWrong CAN-frame format!\n\n");
+		fprintf(stderr, "Try: <can_id>#{R|data}\n");
+		fprintf(stderr, "can_id can have 3 (SFF) or 8 (EFF) hex chars\n");
+		fprintf(stderr, "data has 0 to 8 hex-values that can (optionally)");
+		fprintf(stderr, " be seperated by '.'\n\n");
+		fprintf(stderr, "e.g. 5A1#11.2233.44556677.88 / 123#DEADBEEF / ");
+		fprintf(stderr, "5AA# /\n     1F334455#1122334455667788 / 123#R ");
+		fprintf(stderr, "for remote transmission request.\n\n");
+		return 1;
+	    }
+	    if ((nbytes = write(s, &frame, sizeof(frame))) != sizeof(frame)) {
+		    perror("write");
+		    return 1;
+	    }
+    } else if (argc == 2) {
+	    if ((nbytes = read(s, &rframe, sizeof(rframe))) < 0) {
+		    perror("rx frame read");
+	    	    return 0;
+	    }
+            printf("\nread %d bytes\n", nbytes);
+	    fprint_long_canframe(stdout, &rframe, "\n", 0);
     }
-
-    if ((nbytes = read(s, &rframe, sizeof(rframe))) < 0) {
-        perror("rx frame read");
-        return 0; /* quit */
-    }
-
-    printf("\nread %d bytes\n", nbytes);
-
-    fprint_long_canframe(stdout, &rframe, "\n", 0);
 
     close(s);
-
     return 0;
 }
